@@ -1,0 +1,6 @@
+alias n="nats -s http://127.0.0.1:30000"
+n kv add bar
+n bench foo --kv --multisubject --bucket bar --storage file --msgs 100000 --size 1k --pub 4 --csv=test.csv --dedup --request --purge
+
+監控
+nats-top -s 127.0.0.1 -m 30001
