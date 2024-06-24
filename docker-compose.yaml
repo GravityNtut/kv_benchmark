@@ -1,0 +1,35 @@
+version: '0.1'
+
+networks:
+  monitoring:
+
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  nats_exporter:
+    image: natsio/prometheus-nats-exporter
+    command: -jsz streams http://host.docker.internal:30001/jsz
+    networks:
+      - monitoring
+    ports:
+      - "7777:7777"
+  grafana:
+    image: grafana/grafana:9.3.6
+    volumes:
+      - ./grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: pass
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_LOG_FILTERS: rendering:debug
+    depends_on:
+      - prometheus
+    ports:
+      - '3000:3000'

@@ -7,7 +7,6 @@ import (
 
 	"github.com/cucumber/godog"
 	"github.com/nats-io/nats.go"
-	"go.k6.io/k6/cmd"
 )
 
 var natsUrl string
@@ -88,7 +87,6 @@ func InitBucket(keyCount int, bucketName string, keySize int) error {
 }
 
 func RunPerformanceTest(bucketName string, keyCount int, keySize int, concurrentUser int) error {
-	cmd.Execute()
 	return nil
 }
 
