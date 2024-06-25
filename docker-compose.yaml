@@ -14,12 +14,13 @@ services:
       - monitoring
 
   nats_exporter:
-    image: natsio/prometheus-nats-exporter
-    command: -jsz streams http://host.docker.internal:30001/jsz
+    image: natsio/prometheus-nats-exporter:latest
+    command: -jsz all -connz -connz_detailed -healthz -gatewayz -accstatz -leafz -routez -serverz -subz -varz http://host.docker.internal:30001
     networks:
       - monitoring
     ports:
       - "7777:7777"
+
   grafana:
     image: grafana/grafana:9.3.6
     volumes:
