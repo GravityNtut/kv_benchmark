@@ -4,8 +4,6 @@ Scenario: Run test
     Given The nats server monitoring url is "localhost" and port is "30001"
     Given I have a jetstream bucket named "test"
     Given Create "100000" keys in "test" bucket, per key size "1000" bytes
-    # When "Start" Performance monitoring
-    When Performance test run for "100000" keys in "test" bucket, per key size "1k" bytes, with "10" concurrent clients
-    # Then "Stop" Performance monitoring
+    # When Performance test run for "100000" keys in "test" bucket, per key size "1k" bytes, with "10" concurrent clients
     # Then Export Performance test report
     # And Delete "test" bucket

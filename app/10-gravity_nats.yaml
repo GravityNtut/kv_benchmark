@@ -23,14 +23,14 @@ spec:
         component: nats
     spec:
       containers:
-        - command:
+        - name: gravity-nats
+          image: brobridgehub/nats-server:v1.3.6
+          imagePullPolicy: IfNotPresent
+          command:
             - /nats-server
             - --routes=gravity-nats-0.gravity-nats-mgmt:6222
             - --routes=gravity-nats-1.gravity-nats-mgmt:6222
             - --routes=gravity-nats-2.gravity-nats-mgmt:6222
-          image: brobridgehub/nats-server:v1.3.6
-          imagePullPolicy: IfNotPresent
-          name: gravity-nats
           ports:
             - containerPort: 4222
               name: listen-port
@@ -51,6 +51,27 @@ spec:
           volumeMounts:
             - mountPath: /datastore
               name: nats-store
+        - name: nats-exporter
+          image: natsio/prometheus-nats-exporter:latest
+          args:
+            - '-varz'
+            - '-serverz'
+            - "http://localhost:8222"
+          ports:
+          - containerPort: 7777
+            name: metrics
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 7777
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 7777
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
       securityContext: {}
   volumeClaimTemplates:
     - metadata:

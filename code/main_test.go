@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	"github.com/nats-io/nats.go"
@@ -76,13 +78,34 @@ func InitBucket(keyCount int, bucketName string, keySize int) error {
 		return fmt.Errorf("failed to get bucket: %w", err)
 	}
 
-	for i := 0; i < keyCount; i++ {
-		key := fmt.Sprintf("key-%d", i)
-		value := make([]byte, keySize)
-		if _, err := kv.Put(key, value); err != nil {
-			return fmt.Errorf("failed to put key: %w", err)
+	errChan := make(chan error)
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	start := time.Now()
+	go func() {
+		for i := 0; i < keyCount/2; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			value := make([]byte, keySize)
+			if _, err := kv.Put(key, value); err != nil {
+				errChan <- fmt.Errorf("failed to put key: %w", err)
+			}
 		}
-	}
+		wg.Done()
+	}()
+
+	go func() {
+		for i := keyCount / 2; i < keyCount; i++ {
+			key := fmt.Sprintf("key-%d", i)
+			value := make([]byte, keySize)
+			if _, err := kv.Put(key, value); err != nil {
+				errChan <- fmt.Errorf("failed to put key: %w", err)
+			}
+		}
+		wg.Done()
+	}()
+	wg.Wait()
+	elapsed := time.Since(start)
+	fmt.Printf("Elapsed time: %s\n", elapsed)
 	return nil
 }
 
