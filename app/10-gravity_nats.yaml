@@ -42,12 +42,10 @@ spec:
               name: listen-http
               protocol: TCP
           resources:
-            limits:
-              cpu: "4"
-              memory: 4Gi
-            requests:
-              cpu: 100m
-              memory: 100Mi
+              limits: {}
+              requests:
+                cpu: 100m
+                memory: 100Mi
           volumeMounts:
             - mountPath: /datastore
               name: nats-store
@@ -78,11 +76,11 @@ spec:
         name: nats-store
       spec:
         accessModes: 
-        - ReadWriteOnce
+        - ReadWriteMany
         resources:
           requests:
-            storage: 1Gi
-        storageClassName: local-storage
+            storage: 1500Gi
+        storageClassName: nfs-storage
 ---
 apiVersion: v1
 kind: Service

@@ -12,7 +12,7 @@ spec:
     - ReadWriteOnce
   storageClassName: local-storage
   local:
-    path: /home/selab/hdd/nats0
+    path: /home/selab/hdd
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -36,7 +36,7 @@ spec:
     - ReadWriteOnce
   storageClassName: local-storage
   local:
-    path: /home/selab/hdd/nats1
+    path: /home/selab/hdd
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -60,7 +60,7 @@ spec:
     - ReadWriteOnce
   storageClassName: local-storage
   local:
-    path: /home/selab/hdd/nats2
+    path: /home/selab/hdd
   nodeAffinity:
     required:
       nodeSelectorTerms:

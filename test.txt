@@ -1,6 +1,8 @@
 alias n="nats -s http://127.0.0.1:30000"
 n kv add bar
 n bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 100 --pub 10 --csv=test.csv --dedup --request --purge
-
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 30 --dedup --request
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --sub 30 --dedup --request
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --sub 15 --pub 15 --dedup --request
 監控
 nats-top -s 127.0.0.1 -m 30001
