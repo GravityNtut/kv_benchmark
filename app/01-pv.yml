@@ -6,7 +6,7 @@ metadata:
   namespace: ns-benchmark
 spec:
   capacity:
-    storage: 10Gi
+    storage: 500Gi
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
@@ -30,7 +30,7 @@ metadata:
   namespace: ns-benchmark
 spec:
   capacity:
-    storage: 10Gi
+    storage: 500Gi
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce
@@ -54,7 +54,7 @@ metadata:
   namespace: ns-benchmark
 spec:
   capacity:
-    storage: 10Gi
+    storage: 500Gi
   volumeMode: Filesystem
   accessModes:
     - ReadWriteOnce

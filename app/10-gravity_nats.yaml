@@ -31,6 +31,7 @@ spec:
             - --routes=gravity-nats-0.gravity-nats-mgmt:6222
             - --routes=gravity-nats-1.gravity-nats-mgmt:6222
             - --routes=gravity-nats-2.gravity-nats-mgmt:6222
+            - --configFile=/config/jetstream.conf
           ports:
             - containerPort: 4222
               name: listen-port
@@ -49,8 +50,10 @@ spec:
           volumeMounts:
             - mountPath: /datastore
               name: nats-store
+            - name: local-config
+              mountPath: /config
         - name: nats-exporter
-          image: natsio/prometheus-nats-exporter:latest
+          image: natsio/prometheus-nats-exporter:0.15.0
           args:
             - '-varz'
             - '-serverz'
@@ -71,16 +74,20 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 10
       securityContext: {}
+      volumes:
+        - name: local-config
+          persistentVolumeClaim:
+            claimName: local-pvc-config
   volumeClaimTemplates:
     - metadata:
         name: nats-store
       spec:
         accessModes: 
-        - ReadWriteMany
+        - ReadWriteOnce
         resources:
           requests:
-            storage: 1500Gi
-        storageClassName: nfs-storage
+            storage: 500Gi
+        storageClassName: local-storage
 ---
 apiVersion: v1
 kind: Service
