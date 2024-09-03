@@ -1,3 +1,5 @@
+sudo swapoff -a
+
 alias n="nats -s http://127.0.0.1:30000"
 n kv add bar
 預載資料
@@ -17,3 +19,9 @@ nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --stor
 n bench put_test --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 15 --sub 15 --dedup --request --no-progress 2>/dev/null | mawk '/Pub stats: /{printf "%s@ %s@ ", $3, $6} /min/{printf "%s@ %s@ %s\n", $5, $2, $8}' | sed -e 's/,//g' -e 's/@/,/g' >> testFile.txt
 
 mawk '/Pub stats: /{printf "%s@ %s@ ", $3, $6} /min/{printf "%s@ %s@ %s\n", $5, $2, $8} /Sub stats: /{printf "%s@ %s@ ", $3, $6}'
+
+# 執行測試
+nohup ./script/performance_test.sh emulate_test > log.txt 2>&1 &
+nohup ./script/performance_test.sh big_test_copy true >> result/big_test_copy/log.txt 2>&1 &
+# 查看當前執行ps
+ps -aux|grep script/performance_test.sh 
