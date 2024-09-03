@@ -1,6 +1,27 @@
+sudo swapoff -a
+
 alias n="nats -s http://127.0.0.1:30000"
 n kv add bar
-n bench foo --kv --multisubject --bucket bar --storage file --msgs 100000 --size 1k --pub 4 --csv=test.csv --dedup --request --purge
+預載資料
+n bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 100 --pub 10 --csv=test.csv --dedup --request --purge
 
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 30 --dedup --request
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --sub 30 --dedup --request
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --sub 15 --pub 15 --dedup --request
 監控
 nats-top -s 127.0.0.1 -m 30001
+
+後台執行(nohup ~ &)+輸出結果到out.txt	ps. 不可用alias
+nohup nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 30 --dedup --request --no-progress &> tmp/out.txt &
+
+nats -s http://127.0.0.1:30000 bench foo --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 30 --dedup --request --no-progress | mawk '/Pub stats: /{printf "%s %s ", $3, $6} /min/{printf "%s %s %s\n", $2, $5, $8}' >> ~/Desktop/kv_benchmark/result/test_result.csv
+
+n bench put_test --kv --multisubject --bucket bar --storage file --msgs 1000000 --size 1k --pub 15 --sub 15 --dedup --request --no-progress 2>/dev/null | mawk '/Pub stats: /{printf "%s@ %s@ ", $3, $6} /min/{printf "%s@ %s@ %s\n", $5, $2, $8}' | sed -e 's/,//g' -e 's/@/,/g' >> testFile.txt
+
+mawk '/Pub stats: /{printf "%s@ %s@ ", $3, $6} /min/{printf "%s@ %s@ %s\n", $5, $2, $8} /Sub stats: /{printf "%s@ %s@ ", $3, $6}'
+
+# 執行測試
+nohup ./script/performance_test.sh emulate_test > log.txt 2>&1 &
+nohup ./script/performance_test.sh big_test_copy true >> result/big_test_copy/log.txt 2>&1 &
+# 查看當前執行ps
+ps -aux|grep script/performance_test.sh 

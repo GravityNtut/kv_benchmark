@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 1s
+
+  external_labels:
+    monitor: 'NATS Server'
+scrape_configs:
+  - job_name: 'nats_exporter'
+    static_configs:
+      - targets: ['192.168.14.39:30007','192.168.14.39:30008','192.168.14.39:30009'] 

@@ -9,3 +9,12 @@ nodes:
   - containerPort: 30001
     hostPort: 30001
     protocol: TCP
+  - containerPort: 30007
+    hostPort: 30007
+    protocol: TCP
+  - containerPort: 30008
+    hostPort: 30008
+    protocol: TCP
+  - containerPort: 30009
+    hostPort: 30009
+    protocol: TCP
