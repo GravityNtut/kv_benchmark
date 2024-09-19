@@ -42,7 +42,6 @@ def run_plt(subject, csv_file_path, output_png_path):
     df = pd.read_csv(csv_file_path)
 
     concurrent_user_set = set(df['concurrent_user'])
-    concurrent_user_array = np.array(list(concurrent_user_set))
 
     # Convert units to MB/sec
     filter = (df['throughput_unit'].str.contains('KB/sec'))
@@ -67,6 +66,9 @@ def run_plt(subject, csv_file_path, output_png_path):
 
     put_get_df = average_throughput.groupby(['payload_size', 'concurrent_user'])
     sum_put_get_df = put_get_df['throughput'].sum().reset_index()
+    if( subject == 'PUT GET Test'):
+            sum_put_get_df['concurrent_user'] = sum_put_get_df['concurrent_user'] * 2
+            concurrent_user_set = { x * 2 for x in concurrent_user_set}
     print(sum_put_get_df)
     sorted_concurrent_user_set = sorted(concurrent_user_set)
     for concurrent_user in sorted_concurrent_user_set:
