@@ -13,14 +13,15 @@ def median(data_frame):
         return data_frame[:mid], data_frame[mid:], (data_frame[mid - 1] + data_frame[mid]) / 2
 
 def drop_outlier(df: pd.DataFrame):
-    lHalf, rHalf, Q2 = median( df['throughput'] )
-    Q1 = median(lHalf)[2]
-    Q3 = median(rHalf)[2]
-    IQR = Q3 - Q1
-    upperbound = Q3 + IQR * 1.5
-    lowerbound = Q1 - IQR * 1.5
-    clean_index = df[ (df['throughput']<lowerbound) | (df['throughput']>upperbound) ].index
-    df = df.drop(clean_index)
+    if( len(df) > 1):
+        lHalf, rHalf, Q2 = median( df['throughput'] )
+        Q1 = median(lHalf)[2]
+        Q3 = median(rHalf)[2]
+        IQR = Q3 - Q1
+        upperbound = Q3 + IQR * 1.5
+        lowerbound = Q1 - IQR * 1.5
+        clean_index = df[ (df['throughput']<lowerbound) | (df['throughput']>upperbound) ].index
+        df = df.drop(clean_index)
     return df
 
 def sort_func(data):
@@ -87,7 +88,7 @@ def run_plt(subject, csv_file_path, output_png_path):
 
     plt.savefig(output_png_path)
 
-run_plt('PUT Test', 'result/big_test/put_test.csv', 'result/plt/put_test.png')
-run_plt('GET Test', 'result/big_test/get_test.csv', 'result/plt/get_test.png')
-run_plt('PUT GET Test', 'result/big_test/put_get_test.csv', 'result/plt/put_get_test.png')
+run_plt('PUT Test', 'result/test_1001/put_test.csv', 'result/plt/test_1001/put_test.png')
+run_plt('GET Test', 'result/test_1001/get_test.csv', 'result/plt/test_1001/get_test.png')
+run_plt('PUT GET Test', 'result/test_1001/put_get_test.csv', 'result/plt/test_1001/put_get_test.png')
 
