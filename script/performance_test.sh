@@ -6,12 +6,12 @@ nats_pv_dir=/home/selab/hdd
 nats_url=http://127.0.0.1:30000
 bucket_name=bucket
 # times_test_run=10
-times_test_run=3
+times_test_run=10
 
 # concurrent_user_array=(1 2 4 8 16 32 64 128 256 512 1024)
-concurrent_user_array=(32)
+concurrent_user_array=(32 128 512 1024)
 # payload_array=("8" "16" "32" "64" "128" "256" "512" "1k" "2k" "4k" "8k" "16k" "32k" "64k" "128k" "256k" "512k" "1M")
-payload_array=("256")
+payload_array=("256" "1k" "4k" "8k" "512k" "1M")
 
 # payload_size * msg_amount(default:1000000) = 10 GB = 10737418240 B / 8G:8589934592B
 max_total_size=10737418240
@@ -60,13 +60,13 @@ put_get_test(){
 	nats_exit_stat=$?
 	if [ $nats_exit_stat -eq 0 ]
 	then
-		echo "nats success!"	
+		echo "success!"	
 		mawk -v test_time="$test_time" -v msg_amount="$1" -v payload_size="$2" -v concurrent_putter="$concurrent_putter_amount" -v concurrent_getter="$concurrent_getter_amount" '$1=="Pub" {printf "p@ %s@ %s@ %s@ %s@ %s@ %s@ %s\n", msg_amount, payload_size, concurrent_putter, $3, $6, $7, test_time} $1=="Sub" {printf "s@ %s@ %s@ %s@ %s@ %s@ %s@ %s\n", msg_amount, payload_size, concurrent_getter, $3, $6, $7, test_time}' $temp_out_path \
 			| sed -e 's/,//g' -e 's/@/,/g' \
 			>> $_csv_path
 	else
 		echo "nats failed!"
-		echo "msg:" $(tail -n 1 $temp_out_path)
+		echo "error msg:" $(tail -n 1 $temp_out_path)
 	fi
 }
 
@@ -88,12 +88,12 @@ run_concurrent_user_test(){
 
 		msg_amount=$2
 		total=$(($msg_amount*$payload_size_translated))
-		while [ $total -gt $max_total_size ]
-		do
+
+		if [ $total -gt $max_total_size ]
+		then
 			echo "Total size exceeds the limit"
-			msg_amount=$(($msg_amount/10))
-			total=$(($msg_amount*$payload_size_translated))
-		done
+			msg_amount=$(($max_total_size/$payload_size_translated))
+		fi
 
 		for ((i=1; i<=$times_test_run; i++))
 		do
@@ -133,8 +133,6 @@ run_concurrent_user_test(){
 
 
 # $1=test_name $2=append_mode 
-# set -e
-
 if [ $2 != true ]
 then
 	mkdir -p $csv_path/$1
