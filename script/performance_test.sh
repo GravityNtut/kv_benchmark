@@ -43,6 +43,8 @@ put_get_test(){
 	local _csv_path=$4
 	local _concurrent_proportion=$5
 
+	local temp_out_path=$_csv_path"temp.txt"
+
 	if [ $_concurrent_proportion -eq 100 ]
 	then 
 		_csv_path+="put_test.csv"
@@ -52,8 +54,6 @@ put_get_test(){
 	else
 		_csv_path+="put_get_test.csv"
 	fi
-
-	local temp_out_path=$_csv_path"temp.txt"
 
 	test_time=$(date -d "now" +%Y%m%d-%H%M%S)
 
@@ -71,6 +71,7 @@ put_get_test(){
 	else
 		echo "nats failed!"
 		echo "error msg:" $(tail -n 1 $temp_out_path)
+		exit 1
 	fi
 }
 
