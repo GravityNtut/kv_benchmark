@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: gravity-nats
-          image: brobridgehub/nats-server:v1.3.6
+          image: harbor.brobridge.com/gravity/nats-server:v1.3.13-20241001
           imagePullPolicy: IfNotPresent
           command:
             - /nats-server
@@ -42,6 +42,16 @@ spec:
             - containerPort: 8222
               name: listen-http
               protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8222
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 60
+            successThreshold: 1
+            timeoutSeconds: 10
           resources:
               limits: {}
               requests:
@@ -50,8 +60,8 @@ spec:
           volumeMounts:
             - mountPath: /datastore
               name: nats-store
-            - name: local-config
-              mountPath: /config
+            - mountPath: /config
+              name: nfs-config-store
         - name: nats-exporter
           image: natsio/prometheus-nats-exporter:0.15.0
           args:
@@ -73,21 +83,25 @@ spec:
               port: 7777
             initialDelaySeconds: 5
             timeoutSeconds: 10
-      securityContext: {}
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsUser: 1001
       volumes:
-        - name: local-config
+        - name: nfs-config-store
           persistentVolumeClaim:
-            claimName: local-pvc-config
+            claimName: nfs-pvc-config
+
   volumeClaimTemplates:
     - metadata:
         name: nats-store
       spec:
         accessModes: 
-        - ReadWriteOnce
+        - ReadWriteMany
         resources:
           requests:
-            storage: 500Gi
-        storageClassName: local-storage
+            storage: 100Gi
+        storageClassName: nfs-storage
 ---
 apiVersion: v1
 kind: Service

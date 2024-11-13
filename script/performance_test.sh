@@ -1,20 +1,6 @@
 #!/bin/bash
 
-csv_path=/home/selab/Desktop/kv_benchmark/result
-k8s_setup_data_dir=/home/selab/Desktop/kv_benchmark/app
-nats_pv_dir=/home/selab/hdd
-nats_url=http://127.0.0.1:30000
-bucket_name=bucket
-# times_test_run=10
-times_test_run=10
-
-# concurrent_user_array=(1 2 4 8 16 32 64 128 256 512 1024)
-concurrent_user_array=(32 128 512 1024)
-# payload_array=("8" "16" "32" "64" "128" "256" "512" "1k" "2k" "4k" "8k" "16k" "32k" "64k" "128k" "256k" "512k" "1M")
-payload_array=("256" "1k" "4k" "8k" "512k" "1M")
-
-# payload_size * msg_amount(default:1000000) = 10 GB = 10737418240 B / 8G:8589934592B
-max_total_size=10737418240
+source /home/bbg/ntut/kv_benchmark/script/config.conf
 
 init_nats_kv() {
 	kubectl apply -f $k8s_setup_data_dir -R 
@@ -25,14 +11,14 @@ init_nats_kv() {
 		sleep 10
 		status=$(kubectl get pod gravity-nats-2 -n ns-benchmark -o jsonpath='{.status.phase}') || true
 	done
-		sleep 20
+		sleep 30
 	nats -s $nats_url kv add $bucket_name 1>/dev/null
 }
 
 clean_environment() {
 	nats -s $nats_url kv del $bucket_name -f
 	kubectl delete -f $k8s_setup_data_dir -R
-	# && rm -r $nats_pv_dir
+	sleep 5
 }
 
 # $1=msg_amount  $2=payload_size  $3=concurrent_amount  $4=file_path $5=concurrent_proportion (percentage for put, the rest for get e.g., 50=50%)
@@ -138,10 +124,6 @@ run_concurrent_user_test(){
 	done
 }
 
-
-# $1=test_name $2=append_mode 
-_test_name=$1
-_append_mode=$2
 
 if [ $_append_mode != true ]
 then

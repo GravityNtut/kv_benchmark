@@ -5,12 +5,12 @@ metadata:
   name: nfs-pv-0
 spec:
   capacity:
-    storage: 1.5Ti
+    storage: 500Gi
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test
+    server: 172.16.168.2
   storageClassName: nfs-storage
 ---
 apiVersion: v1
@@ -19,12 +19,12 @@ metadata:
   name: nfs-pv-1
 spec:
   capacity:
-    storage: 1.5Ti
+    storage: 500Gi
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test
+    server: 172.16.168.2
   storageClassName: nfs-storage
 ---
 apiVersion: v1
@@ -33,11 +33,39 @@ metadata:
   name: nfs-pv-2
 spec:
   capacity:
-    storage: 1.5Ti
+    storage: 500Gi
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test
+    server: 172.16.168.2
   storageClassName: nfs-storage
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv-config
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  nfs:
+    path: /nfs-for-test/config
+    server: 172.16.168.2
+  storageClassName: nfs-config
 
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc-config
+  namespace: ns-benchmark
+spec:
+  volumeName: nfs-pv-config
+  accessModes:
+    - ReadWriteOnce
+  resources: 
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-config
