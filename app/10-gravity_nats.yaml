@@ -77,17 +77,17 @@ spec:
       volumes:
         - name: local-config
           persistentVolumeClaim:
-            claimName: local-pvc-config
+            claimName: nfs-pvc-config
   volumeClaimTemplates:
     - metadata:
         name: nats-store
       spec:
         accessModes: 
-        - ReadWriteOnce
+        - ReadWriteMany
         resources:
           requests:
             storage: 500Gi
-        storageClassName: local-storage
+        storageClassName: nfs-storage
 ---
 apiVersion: v1
 kind: Service

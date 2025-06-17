@@ -9,8 +9,8 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test/performance/kv_benchmark
+    server: 172.16.168.2
   storageClassName: nfs-storage
 ---
 apiVersion: v1
@@ -23,8 +23,8 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test/performance/kv_benchmark
+    server: 172.16.168.2
   storageClassName: nfs-storage
 ---
 apiVersion: v1
@@ -37,7 +37,7 @@ spec:
   accessModes:
     - ReadWriteMany
   nfs:
-    path: /mnt/raid0/nfs
-    server: 192.168.14.38
+    path: /nfs-for-test/performance/kv_benchmark
+    server:  172.16.168.2
   storageClassName: nfs-storage
 

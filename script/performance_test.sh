@@ -45,34 +45,91 @@ put_get_test(){
 
 	local temp_out_path=$_csv_path"temp.txt"
 
-	if [ $_concurrent_proportion -eq 100 ]
-	then 
-		_csv_path+="put_test.csv"
-	elif [ $_concurrent_proportion -eq 0 ]
-	then
-		_csv_path+="get_test.csv"
-	else
-		_csv_path+="put_get_test.csv"
-	fi
+    local temp_dir="/tmp/nats_benchmark"
+    mkdir -p "$temp_dir"
+    local put_temp_path="${temp_dir}/put_temp_${_msg_amount}_${_payload_size}_${_concurrent_amount}.txt"
+    local get_temp_path="${temp_dir}/get_temp_${_msg_amount}_${_payload_size}_${_concurrent_amount}.txt"
+
+	
+	if [ "$_concurrent_proportion" -eq 100 ]; then 
+        _csv_path="${_csv_path}put_test.csv"
+    elif [ "$_concurrent_proportion" -eq 0 ]; then
+        _csv_path="${_csv_path}get_test.csv"
+    else
+        _csv_path="${_csv_path}put_get_test.csv"
+    fi
+    
 
 	test_time=$(date -d "now" +%Y%m%d-%H%M%S)
 
 	concurrent_putter_amount=$(($_concurrent_amount*$_concurrent_proportion/100))
 	concurrent_getter_amount=$(($_concurrent_amount-$concurrent_putter_amount))
 
-	nats -s $nats_url bench put_get_test --kv --multisubject --bucket $bucket_name --storage file --msgs $_msg_amount --size $_payload_size --pub $concurrent_putter_amount --sub $concurrent_getter_amount --dedup --request --no-progress > $temp_out_path 2>&1 
-	nats_exit_stat=$?
-	if [ $nats_exit_stat -eq 0 ]
-	then
-		echo "success!"	
-		mawk -v test_time="$test_time" -v msg_amount="$_msg_amount" -v payload_size="$_payload_size" -v concurrent_putter="$concurrent_putter_amount" -v concurrent_getter="$concurrent_getter_amount" '$1=="Pub" {printf "p@ %s@ %s@ %s@ %s@ %s@ %s@ %s\n", msg_amount, payload_size, concurrent_putter, $3, $6, $7, test_time} $1=="Sub" {printf "s@ %s@ %s@ %s@ %s@ %s@ %s@ %s\n", msg_amount, payload_size, concurrent_getter, $3, $6, $7, test_time}' $temp_out_path \
-			| sed -e 's/,//g' -e 's/@/,/g' \
-			>> $_csv_path
-	else
-		echo "nats failed!"
-		echo "error msg:" $(tail -n 1 $temp_out_path)
-		exit 1
-	fi
+    echo "Starting benchmark: $_msg_amount messages, ${_payload_size}B size, $_concurrent_amount total clients"
+    echo "  - PUT clients: $concurrent_putter_amount"
+    echo "  - GET clients: $concurrent_getter_amount"
+    
+
+    # Put Test
+    if [ "$concurrent_putter_amount" -gt 0 ]; then
+        echo "Running PUT benchmark..."
+        nats -s "$nats_url" bench kv put \
+            --bucket "$bucket_name" \
+            --msgs "$_msg_amount" \
+            --size "$_payload_size" \
+            --clients "$concurrent_putter_amount" \
+            --no-progress > "$put_temp_path" 2>&1
+        
+        if [ $? -ne 0 ]; then
+            echo "PUT test failed!"
+            cat "$put_temp_path"
+            return 1
+        fi
+        
+
+		local put_msgs_sec=$(grep "Pub stats:" "$put_temp_path" | awk '{print $3}' | sed 's/,//g')
+		local put_avg_ms=$(grep "Pub stats:" "$put_temp_path" | awk '{print $3}' | sed 's/,//g')
+		local put_stddev_ms="0"
+			
+        if [ -n "$put_msgs_sec" ] && [ -n "$put_avg_ms" ] && [ -n "$put_stddev_ms" ]; then
+            echo "PUT,$_msg_amount,$_payload_size,$concurrent_putter_amount,$put_msgs_sec,$put_avg_ms,$put_stddev_ms,$test_time" >> "$_csv_path"
+            echo "PUT test completed: $put_msgs_sec msgs/sec, ${put_avg_ms}ms avg, ${put_stddev_ms}ms stddev"
+        else
+            echo "Warning: Could not parse PUT results"
+            cat "$put_temp_path"
+        fi
+    fi
+    
+    # Get Test
+    if [ "$concurrent_getter_amount" -gt 0 ]; then
+        echo "Running GET benchmark..."
+        nats -s "$nats_url" bench kv get \
+            --bucket "$bucket_name" \
+            --msgs "$_msg_amount" \
+            --clients "$concurrent_getter_amount" \
+            --no-progress > "$get_temp_path" 2>&1
+        
+        if [ $? -ne 0 ]; then
+            echo "GET test failed!"
+            cat "$get_temp_path"
+            return 1
+        fi
+        
+        local get_msgs_sec=$(grep -A 10 "Get statistics" "$get_temp_path" | grep "Msgs/Sec" | awk '{print $3}' | sed 's/,//g')
+        local get_avg_ms=$(grep -A 10 "Get statistics" "$get_temp_path" | grep "Average:" | awk '{print $2}' | sed 's/ms//g')
+        local get_stddev_ms=$(grep -A 10 "Get statistics" "$get_temp_path" | grep "StdDev:" | awk '{print $2}' | sed 's/ms//g')
+        
+        if [ -n "$get_msgs_sec" ] && [ -n "$get_avg_ms" ] && [ -n "$get_stddev_ms" ]; then
+            echo "GET,$_msg_amount,$_payload_size,$concurrent_getter_amount,$get_msgs_sec,$get_avg_ms,$get_stddev_ms,$test_time" >> "$_csv_path"
+            echo "GET test completed: $get_msgs_sec msgs/sec, ${get_avg_ms}ms avg, ${get_stddev_ms}ms stddev"
+        else
+            echo "Warning: Could not parse GET results"
+            cat "$get_temp_path"
+        fi
+    fi
+    
+    echo "Benchmark complete! Results saved to $_csv_path"
+    return 0
 }
 
 # $1=test_name $2=msg_amount $3=payload_size
@@ -113,27 +170,27 @@ run_concurrent_user_test(){
 			sleep 10
 		done
 		
-		for ((i=1; i<=$times_test_run; i++))
-		do
-			echo "======= Starting get test $i ======="
-			echo "| Concurrent users: $user_amount"
-			echo "| msg amount: $_msg_amount"
-			echo "| Payload size: $_payload_size"
-			echo "===================================="
-			put_get_test $_msg_amount $_payload_size $user_amount $csv_path/$_test_name/ 0
-			sleep 10
-		done
+		# for ((i=1; i<=$times_test_run; i++))
+		# do
+		# 	echo "======= Starting get test $i ======="
+		# 	echo "| Concurrent users: $user_amount"
+		# 	echo "| msg amount: $_msg_amount"
+		# 	echo "| Payload size: $_payload_size"
+		# 	echo "===================================="
+		# 	put_get_test $_msg_amount $_payload_size $user_amount $csv_path/$_test_name/ 0
+		# 	sleep 10
+		# done
 
-		for ((i=1; i<=$times_test_run; i++))
-		do
-			echo "===== Starting put get test $i ====="
-			echo "| Concurrent users: $user_amount"
-			echo "| msg amount: $_msg_amount"
-			echo "| Payload size: $_payload_size"
-			echo "===================================="
-			put_get_test $_msg_amount $_payload_size $user_amount $csv_path/$_test_name/ 50
-			sleep 10
-		done
+		# for ((i=1; i<=$times_test_run; i++))
+		# do
+		# 	echo "===== Starting put get test $i ====="
+		# 	echo "| Concurrent users: $user_amount"
+		# 	echo "| msg amount: $_msg_amount"
+		# 	echo "| Payload size: $_payload_size"
+		# 	echo "===================================="
+		# 	put_get_test $_msg_amount $_payload_size $user_amount $csv_path/$_test_name/ 50
+		# 	sleep 10
+		# done
 		clean_environment
 	done
 }

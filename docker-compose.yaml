@@ -3,6 +3,7 @@ version: '0.1'
 networks:
   monitoring:
 
+
 services:
   prometheus:
     image: prom/prometheus
@@ -13,13 +14,15 @@ services:
     networks:
       - monitoring
 
-  # nats_exporter:
-  #   image: natsio/prometheus-nats-exporter:latest
-  #   command: -jsz all -connz -connz_detailed -healthz -gatewayz -accstatz -leafz -routez -serverz -subz -varz http://host.docker.internal:30001
-  #   networks:
-  #     - monitoring
-  #   ports:
-  #     - "7777:7777"
+  nats_exporter:
+    image: natsio/prometheus-nats-exporter:latest
+    command: -jsz all -connz -connz_detailed -healthz -gatewayz -accstatz -leafz -routez -serverz -subz -varz http://172.16.168.11:30001
+    networks:
+      - monitoring
+    ports:
+      - "7777:7777"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Allows container to access host network
 
   grafana:
     image: grafana/grafana:9.3.6
