@@ -22,7 +22,7 @@
    ```bash
    docker-compose up -d
    ```
-3. **執行效能測試**
+3. **執行效能測試（包含部屬部署 NATS 叢集）**
    ```bash
    cd script
    bash performance_test.sh <test_name> <append_mode>
@@ -32,6 +32,7 @@
 - 請確認 NFS 伺服器與 StorageClass 設定正確，PVC/PV 狀態需為 Bound。
 - 若遇到 PV 為 Released，請參考 README 或 FAQ 處理。
 - Grafana 預設帳號密碼：`admin` / `pass`，可透過 SSH port forwarding 於本地瀏覽 http://localhost:3000。
+- 若Grafana 遇到Data Source無法抓取情形，可以透過 SSH port forwarding 於本地確認 http://localhost:9090/targets 的nats-port狀態。
 
 ## 常用指令
 - 查看 PV/PVC 狀態：
