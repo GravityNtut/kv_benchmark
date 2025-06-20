@@ -1,3 +1,5 @@
 result/*
 kv_bench
 log.txt
+grafana_data/grafana.db
+nohup.out

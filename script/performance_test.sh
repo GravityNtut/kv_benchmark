@@ -3,15 +3,15 @@
 csv_path=/home/bbg/kv_benchmark/result
 k8s_setup_data_dir=/home/bbg/kv_benchmark/app
 nats_pv_dir=/home/selab/hdd
-nats_url=http://127.16.168.11:30000
+nats_url=http://172.16.168.11:30000
 bucket_name=bucket
 # times_test_run=10
-times_test_run=10
+times_test_run=1
 
 # concurrent_user_array=(1 2 4 8 16 32 64 128 256 512 1024)
-concurrent_user_array=(32 128 512 1024)
+concurrent_user_array=(32)
 # payload_array=("8" "16" "32" "64" "128" "256" "512" "1k" "2k" "4k" "8k" "16k" "32k" "64k" "128k" "256k" "512k" "1M")
-payload_array=("256" "1k" "4k" "8k" "512k" "1M")
+payload_array=("256" )
 
 # payload_size * msg_amount(default:1000000) = 10 GB = 10737418240 B / 8G:8589934592B
 max_total_size=10737418240
