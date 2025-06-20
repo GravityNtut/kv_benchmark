@@ -1,9 +1,9 @@
 #!/bin/bash
 
-csv_path=/home/selab/Desktop/kv_benchmark/result
-k8s_setup_data_dir=/home/selab/Desktop/kv_benchmark/app
+csv_path=/home/bbg/kv_benchmark/result
+k8s_setup_data_dir=/home/bbg/kv_benchmark/app
 nats_pv_dir=/home/selab/hdd
-nats_url=http://127.0.0.1:30000
+nats_url=http://127.16.168.11:30000
 bucket_name=bucket
 # times_test_run=10
 times_test_run=10
