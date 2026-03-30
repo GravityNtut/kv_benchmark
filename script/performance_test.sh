@@ -1,12 +1,76 @@
 #!/bin/bash
 
 csv_path=/home/bbg/kv_benchmark/result
-k8s_setup_data_dir=/home/bbg/kv_benchmark/app
+k8s_setup_data_dir=${K8S_SETUP_DIR:-/home/bbg/kv_benchmark/deployments/docker-k8s/k8s}
 nats_pv_dir=/home/selab/hdd
 nats_url=http://172.16.168.11:30000
 bucket_name=bucket
 # times_test_run=10
 times_test_run=1
+
+is_private_ipv4() {
+	local ip=$1
+	if [[ $ip =~ ^10\. ]]; then
+		return 0
+	fi
+	if [[ $ip =~ ^192\.168\. ]]; then
+		return 0
+	fi
+	if [[ $ip =~ ^127\. ]]; then
+		return 0
+	fi
+	if [[ $ip =~ ^172\.([0-9]{1,3})\. ]]; then
+		local octet=${BASH_REMATCH[1]}
+		if ((octet >= 16 && octet <= 31)); then
+			return 0
+		fi
+	fi
+	return 1
+}
+
+validate_nats_target() {
+	local url=$1
+	local target_host
+	target_host=$(echo "$url" | sed -E 's#^[A-Za-z][A-Za-z0-9+.-]*://##; s#/.*$##; s/:.*$//')
+
+	if [ -z "$target_host" ]; then
+		echo "Error: invalid nats_url '$url'"
+		return 1
+	fi
+
+	if [[ $target_host =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+		if ! is_private_ipv4 "$target_host"; then
+			echo "Error: refusing public target '$target_host'. Use private network IP only."
+			return 1
+		fi
+		return 0
+	fi
+
+	if [ "$target_host" = "localhost" ] || [ "$target_host" = "host.docker.internal" ]; then
+		return 0
+	fi
+
+	if ! command -v getent >/dev/null 2>&1; then
+		echo "Error: getent is required to validate hostname target '$target_host'."
+		return 1
+	fi
+
+	local resolved_ips
+	resolved_ips=$(getent ahostsv4 "$target_host" | awk '{print $1}' | sort -u)
+	if [ -z "$resolved_ips" ]; then
+		echo "Error: cannot resolve target host '$target_host'."
+		return 1
+	fi
+
+	while IFS= read -r ip; do
+		if ! is_private_ipv4 "$ip"; then
+			echo "Error: host '$target_host' resolves to public IP '$ip'."
+			return 1
+		fi
+	done <<< "$resolved_ips"
+
+	return 0
+}
 
 # concurrent_user_array=(1 2 4 8 16 32 64 128 256 512 1024)
 concurrent_user_array=(32)
@@ -199,6 +263,11 @@ run_concurrent_user_test(){
 # $1=test_name $2=append_mode 
 _test_name=$1
 _append_mode=$2
+
+if ! validate_nats_target "$nats_url"; then
+	echo "Benchmark stopped to prevent accidental outbound traffic."
+	exit 1
+fi
 
 if [ $_append_mode != true ]
 then

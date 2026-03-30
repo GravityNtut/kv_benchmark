@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: ns-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.121.0
+          args: ["--config=/etc/otelcol-contrib/config.yaml"]
+          ports:
+            - name: prom-export
+              containerPort: 9464
+          volumeMounts:
+            - name: otel-config
+              mountPath: /etc/otelcol-contrib
+      volumes:
+        - name: otel-config
+          configMap:
+            name: otel-collector-config
+            items:
+              - key: config.yaml
+                path: config.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: ns-monitoring
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: prom-export
+      port: 9464
+      targetPort: 9464
+  type: ClusterIP

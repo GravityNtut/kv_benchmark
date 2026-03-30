@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: ns-monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      external_labels:
+        monitor: NATS-Server
+    scrape_configs:
+      - job_name: otel_collector
+        static_configs:
+          - targets: ["otel-collector.ns-monitoring.svc.cluster.local:9464"]

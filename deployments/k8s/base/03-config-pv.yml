@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pv-config
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /nfs-for-test/performance/kv_benchmark/config
+    server: 172.16.168.2
+  storageClassName: nfs-storage-config
+  persistentVolumeReclaimPolicy: Retain
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-pvc-config
+  namespace: ns-benchmark
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources: 
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-storage-config

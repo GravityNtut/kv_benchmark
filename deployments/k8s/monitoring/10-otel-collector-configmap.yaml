@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: ns-monitoring
+data:
+  config.yaml: |
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: nats_exporter
+              scrape_interval: 10s
+              static_configs:
+                - targets:
+                    - gravity-nats-0.ns-benchmark.svc.cluster.local:7777
+                    - gravity-nats-1.ns-benchmark.svc.cluster.local:7777
+                    - gravity-nats-2.ns-benchmark.svc.cluster.local:7777
+
+    processors:
+      batch:
+
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:9464
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus]
+          processors: [batch]
+          exporters: [prometheus]
